@@ -15,8 +15,8 @@
  */
 package com.google.gwt.validation.client;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorFactory;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorFactory;
 
 /**
  * GWT does not support {@link ConstraintValidatorFactory} use
@@ -38,4 +38,8 @@ public final class GwtConstraintValidatorFactory implements
         + " use GWT.create instead");
   }
 
+  @Override
+  public void releaseInstance(ConstraintValidator<?, ?> constraintValidator) {
+
+  }
 }

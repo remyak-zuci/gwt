@@ -25,9 +25,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.PropertyDescriptor;
-
+import jakarta.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.metadata.PropertyDescriptor;
+import jakarta.validation.metadata.ConstructorDescriptor;
+import jakarta.validation.metadata.GroupConversionDescriptor;
+import jakarta.validation.metadata.ConstructorDescriptor;
+import jakarta.validation.metadata.ContainerElementTypeDescriptor;
+import jakarta.validation.metadata.MethodDescriptor;
+import jakarta.validation.metadata.MethodType;
 /**
  * Abstract BeanDescriptor for use by generated {@link GwtBeanDescriptor}.
  * <p>
@@ -156,4 +161,27 @@ public final class GwtBeanDescriptorImpl<T> implements GwtBeanDescriptor<T> {
     // TODO(idol) Find some way to pass this via the constructor rather than after creation
     this.validationGroupsMetadata = validationGroupsMetadata;
   }
+
+  @Override
+  public Set<ConstructorDescriptor> getConstrainedConstructors() {
+    return null;
+  }
+  @Override
+  public ConstructorDescriptor getConstraintsForConstructor(Class<?>... classes) {
+    return null;
+  }
+  @Override
+  public Set<MethodDescriptor> getConstrainedMethods(MethodType methodType, MethodType... methodTypes) {
+    return null;
+  }
+  /*@Override
+  public Set<ContainerElementTypeDescriptor> getConstrainedContainerElementTypes() {
+    return null;
+  }
+
+  @Override
+  public MethodDescriptor getConstraintsForMethod(String s, Class<?>... classes) {
+    return null;
+  }*/
+
 }

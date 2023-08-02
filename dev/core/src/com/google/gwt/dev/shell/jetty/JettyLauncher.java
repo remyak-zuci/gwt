@@ -43,12 +43,22 @@ import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
 import org.eclipse.jetty.util.preventers.AppContextLeakPreventer;
-import org.eclipse.jetty.util.preventers.DOMLeakPreventer;
-import org.eclipse.jetty.util.preventers.GCThreadLeakPreventer;
-import org.eclipse.jetty.util.preventers.SecurityProviderLeakPreventer;
+/* Deprecated.
+* reported as fixed in jdk 7, see https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6916498
+*/
+// import org.eclipse.jetty.util.preventers.DOMLeakPreventer;
+/* Deprecated.
+ *       fixed in jdvm 9b130, see https://bugs.java.com/bugdatabase/view_bug.do?bug_id=JDK-8157570*/
+//import org.eclipse.jetty.util.preventers.GCThreadLeakPreventer;
+/*
+ * Deprecated.
+ * sun.security.pkcs11.SunPKCS11 class explicitly sets thread classloader to null
+ */
+//import org.eclipse.jetty.util.preventers.SecurityProviderLeakPreventer;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.webapp.ClasspathPattern;
+import org.eclipse.jetty.webapp.ClassMatcher;
 import org.eclipse.jetty.webapp.Configuration;
+import org.eclipse.jetty.webapp.Configurations;
 import org.eclipse.jetty.webapp.WebAppClassLoader;
 import org.eclipse.jetty.webapp.WebAppContext;
 
@@ -63,7 +73,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
-
+import java.util.ArrayList;
 /**
  * A {@link ServletContainerLauncher} for an embedded Jetty server.
  */
@@ -350,13 +360,13 @@ public class JettyLauncher extends ServletContainerLauncher {
 
       private static final String META_INF_SERVICES = "META-INF/services/";
 
-      private final ClasspathPattern systemClassesFromWebappFirst = new ClasspathPattern(new String[] {
+      private final ClassMatcher systemClassesFromWebappFirst = new ClassMatcher(new String[] {
           "-javax.servlet.",
           "-javax.el.",
           "-javax.websocket.",
           "javax.",
       });
-      private final ClasspathPattern allowedFromSystemClassLoader = new ClasspathPattern(new String[] {
+      private final ClassMatcher allowedFromSystemClassLoader = new ClassMatcher(new String[] {
           "org.eclipse.jetty.",
           "javax.websocket.",
           // Jasper
@@ -377,14 +387,46 @@ public class JettyLauncher extends ServletContainerLauncher {
       public Enumeration<URL> getResources(String name) throws IOException {
         // Logic copied from Jetty's WebAppClassLoader, modified to use the system classloader
         // instead of the parent classloader for server classes
-        List<URL> fromParent = WebAppContextWithReload.this.isServerClass(name)
-            ? Collections.<URL>emptyList()
-            : Lists.newArrayList(Iterators.forEnumeration(systemClassLoader.getResources(name)));
-        Iterator<URL> fromWebapp = WebAppContextWithReload.this.isSystemClass(name)
+        List<URL> fromParent = new ArrayList<>();
+        List<URL> fromWebapp = new ArrayList<>();
+
+        Enumeration<URL> urls = systemClassLoader.getResources(name);
+        while (urls != null && urls.hasMoreElements())
+        {
+          URL url = urls.nextElement();
+          if (Boolean.TRUE.equals(__loadServerClasses.get()) || !WebAppContextWithReload.this.isServerResource(name, url))
+            fromParent.add(url);
+        }
+        urls = this.findResources(name);
+        while (urls != null && urls.hasMoreElements())
+        {
+          URL url = urls.nextElement();
+          if (!WebAppContextWithReload.this.isSystemResource(name, url) || fromParent.isEmpty())
+            fromWebapp.add(url);
+        }
+        List<URL> resources;
+
+        if (WebAppContextWithReload.this.isParentLoaderPriority())
+        {
+          fromParent.addAll(fromWebapp);
+          resources = fromParent;
+        }
+        else
+        {
+          fromWebapp.addAll(fromParent);
+          resources = fromWebapp;
+        }
+
+        return Collections.enumeration(resources);
+
+        /*List<URL> fromParent = WebAppContextWithReload.this.isServerClass(Class.forName(name))
+                ? Collections.<URL>emptyList()
+                : Lists.newArrayList(Iterators.forEnumeration(systemClassLoader.getResources(name)));
+        Iterator<URL> fromWebapp = WebAppContextWithReload.this.isSystemClass(Class.forName(name))
                 && !fromParent.isEmpty()
-            ? Collections.<URL>emptyIterator()
-            : Iterators.forEnumeration(findResources(name));
-        return Iterators.asEnumeration(Iterators.concat(fromWebapp, fromParent.iterator()));
+                ? Collections.<URL>emptyIterator()
+                : Iterators.forEnumeration(findResources(name));
+        return Iterators.asEnumeration(Iterators.concat(fromWebapp, fromParent.iterator()));*/
       }
 
       @Override
@@ -400,7 +442,7 @@ public class JettyLauncher extends ServletContainerLauncher {
         // Note: bootstrap has already been searched, so javax. classes should be
         // tried from the webapp first (except for javax.servlet and javax.el).
         URL found;
-        if (WebAppContextWithReload.this.isSystemClass(checkName)
+        if (WebAppContextWithReload.this.isSystemClass(classForNameNoThrow(name))
                 && !systemClassesFromWebappFirst.match(checkName)) {
           found = systemClassLoader.getResource(name);
           if (found != null) {
@@ -416,7 +458,7 @@ public class JettyLauncher extends ServletContainerLauncher {
 
         // See if the outside world has it.
         found = systemClassLoader.getResource(name);
-        if (found == null || WebAppContextWithReload.this.isServerClass(checkName)) {
+        if (found == null || WebAppContextWithReload.this.isServerClass(classForNameNoThrow(name))) {
           return null;
         }
 
@@ -436,13 +478,19 @@ public class JettyLauncher extends ServletContainerLauncher {
         }
         return super.findResource(name);
       }
-
+      private Class classForNameNoThrow(String name) {
+        try {
+          return Class.forName(name);
+        } catch (ClassNotFoundException e) {
+          return null;
+        }
+      }
       @Override
       protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         // For system path, always prefer the outside world.
         // Note: bootstrap has already been searched, so javax. classes should be
         // tried from the webapp first (except for javax.servlet).
-        if (WebAppContextWithReload.this.isSystemClass(name)
+        if (WebAppContextWithReload.this.isSystemClass(classForNameNoThrow(name))
                 && !systemClassesFromWebappFirst.match(name)) {
           try {
             Class<?> loaded = systemClassLoader.loadClass(name);
@@ -458,7 +506,7 @@ public class JettyLauncher extends ServletContainerLauncher {
           return super.loadClass(name, resolve);
         } catch (ClassNotFoundException e) {
           // Don't allow server classes to be loaded from the outside.
-          if (WebAppContextWithReload.this.isServerClass(name)) {
+          if (WebAppContextWithReload.this.isServerClass(classForNameNoThrow(name))) {
             throw e;
           }
         }
@@ -546,6 +594,7 @@ public class JettyLauncher extends ServletContainerLauncher {
      * will always by the system app ClassLoader.
      */
     private final ClassLoader systemClassLoader = Thread.currentThread().getContextClassLoader();
+    private static final ThreadLocal<Boolean> __loadServerClasses = new ThreadLocal<>();
 
     private WebAppContextWithReload(TreeLogger logger, String webApp,
         String contextPath) {
@@ -746,11 +795,11 @@ public class JettyLauncher extends ServletContainerLauncher {
     server.addConnector(connector);
     addPreventers(server);
 
-    Configuration.ClassList cl = Configuration.ClassList.setServerDefault(server);
+    Configurations cl = Configurations.setServerDefault(server);
     try {
       // from jetty-plus.xml
       Thread.currentThread().getContextClassLoader().loadClass("org.eclipse.jetty.plus.webapp.PlusConfiguration");
-      cl.addAfter("org.eclipse.jetty.webapp.FragmentConfiguration",
+      cl.add("org.eclipse.jetty.webapp.FragmentConfiguration",
           "org.eclipse.jetty.plus.webapp.EnvConfiguration",
           "org.eclipse.jetty.plus.webapp.PlusConfiguration");
     } catch (ClassNotFoundException cnfe) {
@@ -760,7 +809,7 @@ public class JettyLauncher extends ServletContainerLauncher {
       // from jetty-annotations.xml
       Thread.currentThread().getContextClassLoader()
           .loadClass("org.eclipse.jetty.annotations.AnnotationConfiguration");
-      cl.addBefore("org.eclipse.jetty.webapp.JettyWebXmlConfiguration",
+      cl.add("org.eclipse.jetty.webapp.JettyWebXmlConfiguration",
           "org.eclipse.jetty.annotations.AnnotationConfiguration");
     } catch (ClassNotFoundException cnfe) {
       logger.log(TreeLogger.Type.DEBUG, "jetty-annotations isn't on the classpath, annotation scanning won't work. This might also affect annotations scanning.");
@@ -820,7 +869,7 @@ public class JettyLauncher extends ServletContainerLauncher {
       if (sslLogger.isLoggable(TreeLogger.TRACE)) {
         sslLogger.log(TreeLogger.TRACE, "Using keystore " + keyStore);
       }
-      SslContextFactory ssl = new SslContextFactory();
+      SslContextFactory.Server ssl = new SslContextFactory.Server();
       if (clientAuth != null) {
         switch (clientAuth) {
           case NONE:
@@ -873,7 +922,10 @@ public class JettyLauncher extends ServletContainerLauncher {
      * eventual calls to requestLatency(long) are:
      * - javax.management.remote.rmi.RMIConnectorServer.start()
      */
-    server.addBean(new GCThreadLeakPreventer());
+    /* Deprecated.
+     * fixed in jdvm 9b130, see https://bugs.java.com/bugdatabase/view_bug.do?bug_id=JDK-8157570
+     */
+     //server.addBean(new GCThreadLeakPreventer());
 
     /*
      * Creating a MessageDigest during web application startup initializes the 
@@ -882,13 +934,20 @@ public class JettyLauncher extends ServletContainerLauncher {
      *
      * Instead we initialize JCA right now.
      */
-    server.addBean(new SecurityProviderLeakPreventer());
+    /*
+     * Deprecated.
+     * sun.security.pkcs11.SunPKCS11 class explicitly sets thread classloader to null
+     */
+     // server.addBean(new SecurityProviderLeakPreventer());
 
     /*
      * Haven't got to the root of what is going on with this leak but if a web app is the first to
      * make the calls below the web application class loader will be pinned in memory.
      */
-    server.addBean(new DOMLeakPreventer());
+    /* Deprecated.
+     * reported as fixed in jdk 7, see https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6916498
+     */
+    //server.addBean(new DOMLeakPreventer());
   }
 
   private void checkStartParams(TreeLogger logger, int port, File appRootDir) {
@@ -936,7 +995,7 @@ public class JettyLauncher extends ServletContainerLauncher {
      */
     try {
       // Policy.getPolicy();
-      Class<?> policyClass = Class.forName("javax.security.auth.Policy");
+      Class<?> policyClass = Class.forName("jakarta.security.auth.Policy");
       Method method = policyClass.getMethod("getPolicy");
       method.invoke(null);
     } catch (ClassNotFoundException e) {

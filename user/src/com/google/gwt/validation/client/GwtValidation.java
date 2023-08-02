@@ -22,7 +22,7 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import javax.validation.groups.Default;
+import jakarta.validation.groups.Default;
 
 /**
  * Annotates a {@code javax.validation.Validator} explicitly listing the classes
@@ -67,7 +67,7 @@ import javax.validation.groups.Default;
  * }
  * </pre>
  * 
- * And then create your {@link javax.validation.ValidatorFactory
+ * And then create your {@link jakarta.validation.ValidatorFactory
  * ValidatorFactory} using
  * 
  * <pre>

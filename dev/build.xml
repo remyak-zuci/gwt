@@ -59,7 +59,7 @@
         <pathelement
             location="${gwt.tools.lib}/hibernate/validator/hibernate-validator-4.1.0.Final.jar"/>
         <pathelement
-            location="${gwt.tools.lib}/javax/validation/validation-api-1.0.0.GA.jar"/>
+            location="${gwt.tools.lib}/jakarta/validation/jakarta.validation-api-3.0.2.jar"/>
         <pathelement
             location="${gwt.tools.lib}/streamhtmlparser/streamhtmlparser-jsilver-r10/streamhtmlparser-jsilver-r10-1.5-rebased.jar"/>
         <pathelement location="${gwt.build.lib}/gwt-dev-${build.host.platform}.jar"/>
@@ -84,7 +84,14 @@
           <include name="objectweb/asm-9.2/asm-util-9.2.jar"/>
           <include name="guava/guava-19.0/guava-19.0-rebased.jar"/>
           <include name="icu4j/63.1/icu4j.jar"/>
-          <include name="jetty/jetty-9.4.44.v20210927/jetty-all-9.4.44.v20210927.jar"/>
+          <include name="jetty/jetty-server-11.0.15.jar"/>
+          <include name="jetty/jetty-webapp-11.0.15.jar"/>
+          <include name="jetty/jetty-http-11.0.15.jar"/>
+          <include name="jetty/jetty-servlet-11.0.15.jar"/>
+          <include name="jetty/jetty-util-11.0.15.jar"/>
+          <include name="jetty/jetty-io-11.0.15.jar"/>
+          <include name="jetty/jakarta.validation-api-3.0.2.jar"/>
+          <include name="jetty/jetty-security-11.0.15.jar"/>
           <include name="gson/gson-2.6.2.jar"/>
           <include name="jscomp/20160315/sourcemap-rebased.jar"/>
           <include name="jsr305/jsr305.jar"/>
@@ -129,7 +136,7 @@
       </targetfiles>
       <sequential>
         <gwt.jar destfile="${alldeps.jar}" duplicate="preserve">
-          <service type="javax.servlet.ServletContainerInitializer">
+          <service type="jakarta.servlet.ServletContainerInitializer">
             <provider classname="org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer"/>
             <provider classname="org.eclipse.jetty.apache.jsp.JettyJasperInitializer"/>
           </service>
@@ -146,12 +153,27 @@
           <zipfileset src="${gwt.tools.lib}/guava/guava-19.0/guava-19.0-rebased.jar"/>
           <zipfileset src="${gwt.tools.lib}/icu4j/63.1/icu4j.jar"/>
           <zipfileset
-              src="${gwt.tools.lib}/jetty/jetty-9.4.44.v20210927/jetty-all-9.4.44.v20210927.jar">
+              src="${gwt.tools.lib}/jetty/jetty-server-11.0.15.jar"/>
+          <zipfileset
+                  src="${gwt.tools.lib}/jetty/jetty-webapp-11.0.15.jar"/>
+          <zipfileset
+                  src="${gwt.tools.lib}/jetty/jetty-http-11.0.15.jar"/>
+          <zipfileset
+                  src="${gwt.tools.lib}/jetty/jetty-servlet-11.0.15.jar"/>
+          <zipfileset
+                  src="${gwt.tools.lib}/jetty/jetty-util-11.0.15.jar"/>
+          <zipfileset
+                  src="${gwt.tools.lib}/jetty/jetty-io-11.0.15.jar"/>
+          <zipfileset
+                  src="${gwt.tools.lib}/jetty/jakarta.validation-api-3.0.2.jar"/>
+          <zipfileset
+                  src="${gwt.tools.lib}/jetty/jetty-security-11.0.15.jar">
+
             <!--
             Don't add jetty auth implementation from jetty-jaspi, as we would also need to package jetty's
             javax.security.auth.message implementation as well as geronimo-jaspi.
              -->
-            <exclude name="META-INF/services/org.eclipse.jetty.security.Authenticator$Factory"/>
+           <exclude name="META-INF/services/org.eclipse.jetty.security.Authenticator$Factory"/>
           </zipfileset>
           <zipfileset src="${gwt.tools.lib}/gson/gson-2.6.2.jar"/>
           <zipfileset src="${gwt.tools.lib}/jscomp/20160315/sourcemap-rebased.jar"/>
@@ -163,9 +185,9 @@
           <zipfileset src="${gwt.tools.lib}/jetty/jetty-9.4.44.v20210927/mortbay-apache-el-8.5.70.jar"/>
           <zipfileset src="${gwt.tools.lib}/jetty/jetty-9.4.44.v20210927/jetty-apache-jsp-9.4.44.v20210927.jar"/>
           <!-- dependencies needed for JSP support in DevMode: END -->
-          <zipfileset src="${gwt.tools.lib}/tomcat/tomcat-servlet-api-8.0.28.jar"/>
-          <zipfileset src="${gwt.tools.lib}/tomcat/tomcat-websocket-api-8.0.28.jar"/>
-          <zipfileset src="${gwt.tools.lib}/tomcat/tomcat-annotations-api-8.0.28.jar"/>
+          <zipfileset src="${gwt.tools.lib}/tomcat/tomcat-servlet-api-10.0.27.jar"/>
+          <zipfileset src="${gwt.tools.lib}/tomcat/tomcat-websocket-10.1.11.jar"/>
+          <zipfileset src="${gwt.tools.lib}/tomcat/tomcat-annotations-api-10.1.11.jar"/>
           <zipfileset
               src="${gwt.tools.lib}/apache/commons/commons-collections-3.2.2.jar"/>
           <!-- htmlunit dependencies not already included: BEGIN -->

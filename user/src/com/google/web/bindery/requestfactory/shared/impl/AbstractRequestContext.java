@@ -64,9 +64,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Path;
-import javax.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Path;
+import jakarta.validation.metadata.ConstraintDescriptor;
 
 /**
  * Base implementations for RequestContext services.
@@ -485,6 +485,18 @@ public abstract class AbstractRequestContext implements RequestContext, EntityCo
 
       // So pick up the instance that we just sent to the server
       return state.editedProxies.get(BaseProxyCategory.stableId(stub));
+    }
+    @Override
+    public <U> U unwrap(Class<U> aClass) {
+      return null;
+    }
+    @Override
+    public Object getExecutableReturnValue() {
+      return null;
+    }
+    @Override
+    public Object[] getExecutableParameters() {
+      return new Object[0];
     }
   }
 

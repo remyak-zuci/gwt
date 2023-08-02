@@ -56,7 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolation;
 
 /**
  * Tests for {@link com.google.web.bindery.requestfactory.shared.RequestFactory}

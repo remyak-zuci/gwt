@@ -18,9 +18,9 @@ package com.google.gwt.validation.client.spi;
 import java.util.Map;
 import java.util.Set;
 
-import javax.validation.ConstraintValidatorFactory;
-import javax.validation.MessageInterpolator;
-import javax.validation.TraversableResolver;
+import jakarta.validation.ConstraintValidatorFactory;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.TraversableResolver;
 
 /**
  * Only the GWT incompatible parts.

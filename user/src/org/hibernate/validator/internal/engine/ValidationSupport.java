@@ -14,9 +14,10 @@
  * the License.
  */
 
-package org.hibernate.validator.engine;
+package org.hibernate.validator.internal.engine;
 
 import com.google.gwt.user.client.rpc.IsSerializable;
+import org.hibernate.validator.internal.engine.path.PathImpl;
 
 import java.util.HashSet;
 

@@ -23,12 +23,12 @@ import com.google.gwt.validation.client.spi.GwtValidationProvider;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.validation.Configuration;
-import javax.validation.ConstraintValidatorFactory;
-import javax.validation.MessageInterpolator;
-import javax.validation.TraversableResolver;
-import javax.validation.ValidatorFactory;
-import javax.validation.spi.BootstrapState;
+import jakarta.validation.Configuration;
+import jakarta.validation.ConstraintValidatorFactory;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.TraversableResolver;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.spi.BootstrapState;
 
 /**
  * Base GWT {@link Configuration}.

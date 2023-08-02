@@ -23,7 +23,7 @@ import org.eclipse.jetty.servlets.GzipFilter;
 
 import java.util.EnumSet;
 
-import javax.servlet.DispatcherType;
+import jakarta.servlet.DispatcherType;
 
 /**
  * A utility class for hosting an instance of {@link RequestFactoryServlet}.

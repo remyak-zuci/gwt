@@ -13,18 +13,21 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.hibernate.validator.engine;
+package org.hibernate.validator.internal.engine;
 
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamReader;
 import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.lang.annotation.ElementType;
 
-import javax.validation.Path;
-import javax.validation.metadata.ConstraintDescriptor;
-
+import jakarta.validation.Path;
+import jakarta.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.ConstraintViolation;
+import org.hibernate.validator.internal.engine.ConstraintViolationImpl;
 /**
  * Custom Serializer for {@link ConstraintViolationImpl}.
  */
@@ -37,11 +40,12 @@ public class ConstraintViolationImpl_CustomFieldSerializer extends
       ConstraintViolationImpl instance) throws SerializationException {
     // no fields
   }
-
   public static ConstraintViolationImpl<Object> instantiate(
       SerializationStreamReader streamReader) throws SerializationException {
 
     String messageTemplate = null;
+    Map<String, Object> messageParameters = new HashMap();
+    Map<String, Object> expressionVariables = new HashMap();
     String interpolatedMessage = streamReader.readString();
     Class<Object> rootBeanClass = null;
     Object rootBean = null;
@@ -49,10 +53,15 @@ public class ConstraintViolationImpl_CustomFieldSerializer extends
     Object value = null;
     Path propertyPath = (Path) streamReader.readObject();
     ConstraintDescriptor<?> constraintDescriptor = null;
-    ElementType elementType = null;
-    return new ConstraintViolationImpl<Object>(messageTemplate,
+    ElementType[] elementTypes = null;
+    Object executableReturnValue = null;
+    Object dynamicPayload = null;
+    return ConstraintViolationImpl.forReturnValueValidation(messageTemplate,
+            messageParameters,
+            expressionVariables,
         interpolatedMessage, rootBeanClass, rootBean, leafBeanInstance, value,
-        propertyPath, constraintDescriptor, elementType);
+        propertyPath, constraintDescriptor,             executableReturnValue,
+            dynamicPayload);
   }
 
   /**

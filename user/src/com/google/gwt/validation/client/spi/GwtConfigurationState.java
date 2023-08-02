@@ -19,9 +19,11 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Set;
 
-import javax.validation.ConstraintValidatorFactory;
-import javax.validation.MessageInterpolator;
-import javax.validation.TraversableResolver;
+import jakarta.validation.ConstraintValidatorFactory;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.TraversableResolver;
+import jakarta.validation.ParameterNameProvider;
+import jakarta.validation.valueextraction.ValueExtractor;
 
 /**
  * Only the GWT incompatible parts.
@@ -38,6 +40,13 @@ public final class GwtConfigurationState extends BaseConfigurationState {
   public Set<InputStream> getMappingStreams() {
     throw new UnsupportedOperationException(
         "GWT Validation does not support getMappingStreams");
+  }
+  @Override
+  public ParameterNameProvider getParameterNameProvider() {
+    return null;
+  }
+  public Set<ValueExtractor<?>> getValueExtractors() {
+    return null;
   }
 
 }
